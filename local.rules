@@ -1,0 +1,24 @@
+# =============================================
+# IDS RULES: Mendeteksi aktivitas Unauthorized Access
+# =============================================
+
+# Rule 1: Mendeteksi Unauthorized Access melalui SSH (Dimensi 2: Hak Akses Data)
+alert tcp any any -> $HOME_NET 22 (msg:"IDS Alert - Unauthorized Access Attempt - SSH"; sid:1000001; rev:1; content:"SSH"; nocase; flow:to_server,established; detection_filter:track by_src, count 3, seconds 60; classtype:attempted-admin; priority:1;)
+
+# Rule 2: Mendeteksi Unauthorized Access melalui HTTPS (Dimensi 2: Hak Akses Data)
+alert tcp any any -> $HOME_NET any (msg:"IDS Alert - Unauthorized Access Attempt - HTTPS"; sid:1000002; rev:1; flow:to_server,established; content:"Authorization"; nocase; content:"Basic"; nocase; classtype:attempted-user; priority:2;)
+
+# Rule 3: Mendeteksi perubahan/akses tidak sah terhadap file log penting (Dimensi 1: Data Log)
+alert tcp any any -> $HOME_NET any (msg:"IDS Alert - Potential Unauthorized Log Access"; sid:1000003; rev:1; content:"/var/log"; nocase; classtype:attempted-admin; priority:2;)
+
+# Rule 4: Mendeteksi serangan ICMP Flood
+alert icmp any any -> $HOME_NET any (msg:"IDS Alert - Serangan ICMP FLOOD"; detection_filter:track by_src, count 40, seconds 10; classtype:attempted-dos; sid:1000004; rev:1;)
+
+# Rule 5: Mendeteksi serangan DOS
+alert tcp any any -> $HOME_NET 80 (flags: S; msg:"IDS Alert - Serangan DOS : SYN flood"; flow:stateless; sid:1000005; detection_filter:track by_dst, count 20, seconds 10; rev:1;)
+
+# Rule 6: Mendeteksi bruteforce
+alert tcp any any -> $HOME_NET 8080 (msg:"IDS Alert - Possible Brute Force Attempt"; sid:1000006; rev:1; content:"POST"; http_uri; content:"/login"; nocase; threshold:type threshold, track by_src, count 5, seconds 30; classtype:attempted-dos; priority:2;)
+
+#Rule 7: Deteksi bruteforce part 2
+alert tcp any any -> $HOME_NET 8080 (msg:"IDS Alert - Possible Brute Force Attempt"; sid:1000007; rev:1; content:"POST"; content:"/login"; nocase; threshold:type threshold, track by_src, count 3, seconds 30; classtype:attempted-dos; priority:2;)
